@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>⚡GEOMETRY DASH⚡ </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(145deg, #0a0f1e 0%, #0c1222 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Courier New', monospace;
+        }
+
+        .game-container {
+            background: #00000055;
+            border-radius: 2rem;
+            padding: 1rem;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 1rem;
+            box-shadow: 0 0 0 4px #2a3f5e, 0 10px 25px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-top: 1rem;
+            background: #0f172ad9;
+            backdrop-filter: blur(4px);
+            padding: 0.6rem 1.5rem;
+            border-radius: 3rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .score-box, .best-box, .level-box {
+            background: #010a1a;
+            padding: 0.3rem 1rem;
+            border-radius: 2rem;
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #f0f9ff;
+            text-shadow: 0 0 4px #00ccff;
+        }
+
+        .score-box span, .best-box span, .level-box span {
+            color: #7dd3fc;
+            font-size: 0.7rem;
+            margin-right: 0.5rem;
+        }
+
+        button {
+            background: #2e3b4e;
+            border: none;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 0.9rem;
+            padding: 0.3rem 1rem;
+            border-radius: 2rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-shadow: 0 3px 0 #0f1722;
+        }
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #0f1722;
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .phase-selector {
+            background: #00000088;
+            padding: 0.2rem 0.8rem;
+            border-radius: 2rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .phase-selector select {
+            background: #1e2a3a;
+            border: 1px solid #4a6a8a;
+            border-radius: 1rem;
+            padding: 0.2rem 0.5rem;
+            color: #ffdd88;
+            font-weight: bold;
+            font-family: monospace;
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            background: #1a1a2e;
+            border-radius: 1rem;
+            width: 120px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #00ff88, #88ff00);
+            width: 0%;
+            height: 100%;
+            border-radius: 1rem;
+            transition: width 0.3s;
+        }
+
+        .tip {
+            font-size: 0.65rem;
+            color: #a0b8d0;
+            background: #081020;
+            padding: 0.2rem 0.6rem;
+            border-radius: 2rem;
+        }
+
+        @media (max-width: 700px) {
+            .info-panel { flex-direction: column; align-items: stretch; }
+            .controls { justify-content: center; }
+            .score-box, .best-box, .level-box { font-size: 1rem; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="900" height="400"></canvas>
+        <div class="info-panel">
+            <div class="score-box"><span>🏁 PROGRESSO</span> <span id="progressPercent">0</span><span>%</span></div>
+            <div class="level-box"><span>🌟 FASE</span> <span id="currentLevelName">1</span></div>
+            <div class="best-box"><span>🏆 MELHOR</span> <span id="bestProgress">0</span><span>%</span></div>
+            <div class="controls">
+                <div class="phase-selector">
+                    <span>🎮</span>
+                    <select id="levelSelect">
+                        <option value="1">FASE 1 - GUGU DADÁ</option>
+                        <option value="2">FASE 2 - DOCIN DOCIN</option>
+                        <option value="3">FASE 3 - NÃO SOU UM ROBÔ</option>
+                        <option value="4">FASE 4 - SOU A META IA</option>
+                        <option value="5">FASE 5 - IA NÍVEL CHAT GPT </option>
+                    </select>
+                    <button id="loadLevelBtn">▶ INICIAR</button>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="tip">🎯 CLIQUE/ESPAÇO = PULAR | PISE NOS BLOCOS VERDES</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const W = 900, H = 400;
+        canvas.width = W;
+        canvas.height = H;
+
+        const GROUND_Y = H - 55;
+        const PLAYER_SIZE = 32;
+        const PLAYER_X = 100;
+
+        // Física
+        let playerY = GROUND_Y - PLAYER_SIZE;
+        let playerVy = 0;
+        let isOnGround = true;
+        let isOnBlock = false;
+        const GRAVITY = 0.8;
+        const JUMP_POWER = -11;
+
+        let obstacles = [];
+        let frameCounter = 0;
+        let gameSpeed = 5.2;
+        
+        let score = 0;
+        let maxScore = 1000;  // pontuação máxima por fase
+        let currentLevel = 1;
+        let levelData = null;
+        let gameOver = false;
+        let gameStarted = false;
+        let invincibleFrames = 0;
+        
+        let screenShake = 0;
+        let hitEffectTimer = 0;
+        let groundOffset = 0;
+        let bgStarOffset = 0;
+
+        // Recordes por fase (%)
+        let levelProgress = {1:0, 2:0, 3:0, 4:0, 5:0};
+
+        // Carregar recordes
+        try {
+            const saved = localStorage.getItem('geometryDashProgress');
+            if(saved){
+                let data = JSON.parse(saved);
+                for(let i=1;i<=5;i++) if(data[i]) levelProgress[i] = data[i];
+            }
+        } catch(e) {}
+        
+        // TIPO_BLOCK = PODE PISAR, mas colisão frontal = morte
+        const TYPE_BLOCK = 'block';
+        const TYPE_SPIKE = 'spike';
+
+        // ========== DEFINIÇÃO DAS FASES ==========
+        const LEVELS = {
+            1: { // FASE 1 - Início fácil
+                name: 'GUGU DADÁ',
+                maxScore: 800,
+                bgHue: 210,
+                spawnPattern: (dist) => {
+                    if(dist > 300 && dist < 500) return {type: TYPE_BLOCK, yOffset: 0, width: 28};
+                    if(dist > 700 && dist < 900) return {type: TYPE_BLOCK, yOffset: 0, width: 28};
+                    if(dist > 1100 && dist < 1250) return {type: TYPE_SPIKE};
+                    return null;
+                }
+            },
+            2: { // FASE 2 - Plataformas variadas
+                name: 'DOCIN DOCIN',
+                maxScore: 1000,
+                bgHue: 140,
+                spawnPattern: (dist) => {
+                    if(dist > 200 && dist < 350) return {type: TYPE_BLOCK, yOffset: 0, width: 30};
+                    if(dist > 500 && dist < 600) return {type: TYPE_BLOCK, yOffset: -25, width: 30};
+                    if(dist > 750 && dist < 880) return {type: TYPE_SPIKE};
+                    if(dist > 1000 && dist < 1150) return {type: TYPE_BLOCK, yOffset: 0, width: 30};
+                    if(dist > 1300 && dist < 1450) return {type: TYPE_BLOCK, yOffset: -45, width: 30};
+                    return null;
+                }
+            },
+            3: { // FASE 3 - ESCADAS (blocos empilhados)
+                name: 'NÃO SOU UM ROBÔ',
+                maxScore: 1100,
+                bgHue: 280,
+                spawnPattern: (dist) => {
+                    // Escada: dois blocos um em cima do outro
+                    if(dist > 300 && dist < 450) return {type: TYPE_BLOCK, yOffset: -50, width: 28, isStair: true};
+                    if(dist > 480 && dist < 630) return {type: TYPE_BLOCK, yOffset: -25, width: 28};
+                    if(dist > 700 && dist < 800) return {type: TYPE_SPIKE};
+                    if(dist > 900 && dist < 1050) return {type: TYPE_BLOCK, yOffset: -55, width: 28, isStair: true};
+                    if(dist > 1100 && dist < 1200) return {type: TYPE_BLOCK, yOffset: -25, width: 28};
+                    if(dist > 1300 && dist < 1450) return {type: TYPE_BLOCK, yOffset: 0, width: 30};
+                    return null;
+                }
+            },
+            4: { // FASE 4 - Desafio (mistura)
+                name: 'META IA',
+                maxScore: 1200,
+                bgHue: 20,
+                spawnPattern: (dist) => {
+                    if(dist > 250 && dist < 380) return {type: TYPE_BLOCK, yOffset: -30, width: 30};
+                    if(dist > 420 && dist < 550) return {type: TYPE_SPIKE};
+                    if(dist > 600 && dist < 750) return {type: TYPE_BLOCK, yOffset: 0, width: 30};
+                    if(dist > 800 && dist < 920) return {type: TYPE_BLOCK, yOffset: -50, width: 28, isStair: true};
+                    if(dist > 980 && dist < 1100) return {type: TYPE_SPIKE};
+                    if(dist > 1150 && dist < 1300) return {type: TYPE_BLOCK, yOffset: -25, width: 30};
+                    return null;
+                }
+            },
+            5: { // FASE 5 - Expert
+                name: 'IA NÍVEL CHAT GPT',
+                maxScore: 1400,
+                bgHue: 350,
+                spawnPattern: (dist) => {
+                    if(dist > 200 && dist < 320) return {type: TYPE_SPIKE};
+                    if(dist > 380 && dist < 520) return {type: TYPE_BLOCK, yOffset: -25, width: 30};
+                    if(dist > 560 && dist < 700) return {type: TYPE_BLOCK, yOffset: -55, width: 28, isStair: true};
+                    if(dist > 750 && dist < 850) return {type: TYPE_SPIKE};
+                    if(dist > 900 && dist < 1050) return {type: TYPE_BLOCK, yOffset: -45, width: 30};
+                    if(dist > 1100 && dist < 1230) return {type: TYPE_BLOCK, yOffset: -20, width: 28};
+                    if(dist > 1280 && dist < 1400) return {type: TYPE_SPIKE};
+                    return null;
+                }
+            }
+        };
+
+// ========== NOVA FUNÇÃO updateUI() COM PROGRESSO MAIS RÁPIDO ==========
+function updateUI(){
+    let percent = Math.floor((score / maxScore) * 100);
+    if(percent > 100) percent = 100;
+    document.getElementById('progressPercent').innerText = percent;
+    document.getElementById('progressFill').style.width = percent + '%';
+    
+    let best = levelProgress[currentLevel] || 0;
+    document.getElementById('bestProgress').innerText = best;
+    document.getElementById('currentLevelName').innerHTML = LEVELS[currentLevel].name;
+}
+
+        function saveProgress(){
+            let percent = Math.floor((score / maxScore) * 100);
+            if(percent > levelProgress[currentLevel]){
+                levelProgress[currentLevel] = percent;
+                try{
+                    localStorage.setItem('geometryDashProgress', JSON.stringify(levelProgress));
+                }catch(e){}
+                updateUI();
+            }
+        }
+
+        function loadLevel(levelId){
+    currentLevel = levelId;
+    
+    // Define maxScore baseado na fase (para 100%)
+    switch(currentLevel){
+        case 1: maxScore = 140; break;   // 7% cada
+        case 2: maxScore = 160; break;   // 6% cada
+        case 3: maxScore = 200; break;   // 5% cada
+        case 4: maxScore = 250; break;   // 4% cada
+        case 5: maxScore = 330; break;   // 3% cada
+        default: maxScore = 200;
+    }
+    
+    gameSpeed = 5.2 + (currentLevel-1) * 0.35;
+    
+    score = 0;
+    obstacles = [];
+    frameCounter = 0;
+    playerY = GROUND_Y - PLAYER_SIZE;
+    playerVy = 0;
+    isOnGround = true;
+    isOnBlock = false;
+    gameOver = false;
+    gameStarted = true;
+    invincibleFrames = 20;
+    updateUI();
+}
+        function resetGame(){
+            loadLevel(currentLevel);
+        }
+
+        function playBeep(freq, durationSec){
+            if(!window.AudioContext && !window.webkitAudioContext) return;
+            try{
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = freq;
+                gain.gain.value = 0.15;
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + durationSec);
+                osc.stop(audioCtx.currentTime + durationSec);
+                setTimeout(() => { try{ audioCtx.close(); }catch(e){} }, durationSec*1000+100);
+            }catch(e){}
+        }
+
+        function jump(){
+            if(gameOver){
+                resetGame();
+                return;
+            }
+            if(!gameStarted){
+                gameStarted = true;
+                resetGame();
+                jump();
+                return;
+            }
+            if((isOnGround || isOnBlock) && !gameOver){
+                playerVy = JUMP_POWER;
+                isOnGround = false;
+                isOnBlock = false;
+                playBeep(300, 0.08);
+            }
+        }
+
+        // Spawn baseado na fase
+        function spawnObstacleFromPattern(distance){
+            let level = LEVELS[currentLevel];
+            let pattern = level.spawnPattern(distance);
+            if(!pattern) return null;
+            
+            if(pattern.type === TYPE_SPIKE){
+                return {
+                    x: W,
+                    type: TYPE_SPIKE,
+                    w: 24,
+                    h: 18,
+                    y: GROUND_Y - 18,
+                    color1: '#e05a2a',
+                    color2: '#8b2c0a',
+                    scored: false,
+                    isSolid: false
+                };
+            } else {
+                let yOffset = pattern.yOffset || 0;
+                let isStair = pattern.isStair || false;
+                let obs = {
+                    x: W,
+                    type: TYPE_BLOCK,
+                    w: pattern.width || 28,
+                    h: 30,
+                    y: GROUND_Y - 30 + yOffset,
+                    color1: '#44cc88',
+                    color2: '#228855',
+                    scored: false,
+                    isSolid: true
+                };
+                if(isStair){
+                    obs.y = GROUND_Y - 60;
+                    obs.h = 28;
+                    obs.color1 = '#55dd99';
+                }
+                return obs;
+            }
+        }
+
+        // SUBSTITUA A FUNÇÃO updateGame() COMPLETA POR ESTA:
+
+function updateGame(){
+    if(gameOver || !gameStarted) return;
+
+    gameSpeed = 5.2 + (currentLevel-1) * 0.35;
+    
+    playerVy += GRAVITY;
+    playerY += playerVy;
+    
+    isOnGround = false;
+    isOnBlock = false;
+    
+    // Colisão com blocos (piso)
+    for(let obs of obstacles){
+        if(obs.type === TYPE_BLOCK && obs.isSolid){
+            let playerBottom = playerY + PLAYER_SIZE;
+            let playerLeft = PLAYER_X;
+            let playerRight = PLAYER_X + PLAYER_SIZE;
+            let obsTop = obs.y;
+            let obsLeft = obs.x;
+            let obsRight = obs.x + obs.w;
+            
+            if(playerVy >= 0 && 
+               playerBottom <= obsTop + 12 && 
+               playerBottom + playerVy >= obsTop &&
+               playerRight > obsLeft + 5 &&
+               playerLeft < obsRight - 5){
+                playerY = obsTop - PLAYER_SIZE;
+                playerVy = 0;
+                isOnBlock = true;
+                break;
+            }
+        }
+    }
+    
+    if(!isOnBlock){
+        if(playerY + PLAYER_SIZE >= GROUND_Y){
+            playerY = GROUND_Y - PLAYER_SIZE;
+            playerVy = 0;
+            isOnGround = true;
+        }
+    }
+    
+    if(playerY < 0){
+        playerY = 0;
+        if(playerVy < 0) playerVy = 0;
+    }
+    
+    // Movimento dos obstáculos
+    for(let i=0; i<obstacles.length; i++){
+        obstacles[i].x -= gameSpeed;
+    }
+    obstacles = obstacles.filter(obs => obs.x + obs.w > 0);
+    
+    // ========== SPAWN DE OBSTÁCULOS CORRIGIDO ==========
+    frameCounter++;
+    let spawnRate = Math.max(35, 60 - Math.floor(score / 150));
+    
+    if(frameCounter >= spawnRate){
+        frameCounter = 0;
+        
+        // Decide o tipo baseado na fase e pontuação
+        let rand = Math.random();
+        let isSpike = false;
+        let yOffset = 0;
+        let isStair = false;
+        
+        // FASE 1: mais blocos normais
+        if(currentLevel === 1){
+            if(rand < 0.3) isSpike = true;
+            yOffset = 0;
+        }
+        // FASE 2: blocos flutuantes
+        else if(currentLevel === 2){
+            if(rand < 0.35) isSpike = true;
+            if(!isSpike && rand < 0.6) yOffset = -25;
+        }
+        // FASE 3: escadas (blocos empilhados)
+        else if(currentLevel === 3){
+            if(rand < 0.3) isSpike = true;
+            if(!isSpike && rand < 0.5) {
+                yOffset = -50;
+                isStair = true;
+            } else if(!isSpike){
+                yOffset = -25;
+            }
+        }
+        // FASE 4: desafio
+        else if(currentLevel === 4){
+            if(rand < 0.4) isSpike = true;
+            if(!isSpike && rand < 0.6) yOffset = -30;
+            if(!isSpike && rand > 0.7) yOffset = -55;
+        }
+        // FASE 5: expert (bem difícil)
+        else {
+            if(rand < 0.5) isSpike = true;
+            if(!isSpike && rand < 0.4) yOffset = -25;
+            if(!isSpike && rand > 0.7) yOffset = -55;
+        }
+        
+        if(isSpike){
+            obstacles.push({
+                x: W,
+                type: TYPE_SPIKE,
+                w: 24,
+                h: 18,
+                y: GROUND_Y - 18,
+                color1: '#e05a2a',
+                color2: '#8b2c0a',
+                scored: false,
+                isSolid: false
+            });
+        } else {
+            let blockH = isStair ? 28 : 30;
+            let blockY = GROUND_Y - blockH + yOffset;
+            
+            obstacles.push({
+                x: W,
+                type: TYPE_BLOCK,
+                w: 28,
+                h: blockH,
+                y: blockY,
+                color1: '#44cc88',
+                color2: '#228855',
+                scored: false,
+                isSolid: true
+            });
+        }
+        
+        // Chance de segundo obstáculo (desafio extra)
+        if(currentLevel >= 3 && Math.random() < 0.2 && obstacles.length < 4){
+            let secondIsSpike = Math.random() < 0.4;
+            if(secondIsSpike){
+                obstacles.push({
+                    x: W + 45,
+                    type: TYPE_SPIKE,
+                    w: 24,
+                    h: 18,
+                    y: GROUND_Y - 18,
+                    color1: '#e05a2a',
+                    color2: '#8b2c0a',
+                    scored: false,
+                    isSolid: false
+                });
+            } else {
+                obstacles.push({
+                    x: W + 45,
+                    type: TYPE_BLOCK,
+                    w: 28,
+                    h: 30,
+                    y: GROUND_Y - 30 - 25,
+                    color1: '#44cc88',
+                    color2: '#228855',
+                    scored: false,
+                    isSolid: true
+                });
+            }
+        }
+    }
+    
+    // COLISÕES
+    const playerRect = {
+        x: PLAYER_X,
+        y: playerY,
+        w: PLAYER_SIZE,
+        h: PLAYER_SIZE
+    };
+    
+    for(let i=0; i<obstacles.length; i++){
+        const obs = obstacles[i];
+        const obsRect = {
+            x: obs.x,
+            y: obs.y,
+            w: obs.w,
+            h: obs.h
+        };
+        
+        let isColliding = (playerRect.x < obsRect.x + obsRect.w &&
+            playerRect.x + playerRect.w > obsRect.x &&
+            playerRect.y < obsRect.y + obsRect.h &&
+            playerRect.y + playerRect.h > obsRect.y);
+        
+        if(isColliding){
+            if(obs.type === TYPE_SPIKE){
+                gameOver = true;
+                gameStarted = false;
+                screenShake = 10;
+                hitEffectTimer = 15;
+                playBeep(120, 0.4);
+                return;
+            }
+            if(obs.type === TYPE_BLOCK){
+                let comingFromTop = (playerVy >= 0 && playerY + PLAYER_SIZE <= obs.y + 12);
+                if(!comingFromTop){
+                    gameOver = true;
+                    gameStarted = false;
+                    screenShake = 10;
+                    hitEffectTimer = 15;
+                    playBeep(100, 0.4);
+                    return;
+                }
+            }
+        }
+        
+      if(!obs.scored && obs.x + obs.w < PLAYER_X){
+    obs.scored = true;
+    
+    // Pontos por obstáculo baseado na fase
+    let pointsPerObstacle;
+    switch(currentLevel){
+        case 1: pointsPerObstacle = 8; break;
+        case 2: pointsPerObstacle = 7; break;
+        case 3: pointsPerObstacle = 6; break;
+        case 4: pointsPerObstacle = 5; break;
+        case 5: pointsPerObstacle = 4; break;
+        default: pointsPerObstacle = 8;
+    }
+    
+    score += pointsPerObstacle;
+    if(score > maxScore) score = maxScore;
+    updateUI();
+    saveProgress();
+    playBeep(880, 0.04);
+}
+    }
+    
+    if(score >= maxScore && !gameOver){
+        gameOver = true;
+        gameStarted = false;
+        playBeep(620, 0.6);
+        saveProgress();
+    }
+    
+    if(invincibleFrames > 0) invincibleFrames--;
+    if(hitEffectTimer > 0) hitEffectTimer--;
+    if(screenShake > 0) screenShake--;
+    
+    groundOffset = (groundOffset - gameSpeed * 0.5) % 60;
+    bgStarOffset = (bgStarOffset - gameSpeed * 0.2) % 120;
+}
+        
+        function drawObstacles(){
+            for(let obs of obstacles){
+                ctx.shadowBlur = 4;
+                let grad = ctx.createLinearGradient(obs.x, obs.y, obs.x+5, obs.y+obs.h);
+                grad.addColorStop(0, obs.color1);
+                grad.addColorStop(1, obs.color2);
+                ctx.fillStyle = grad;
+                ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                
+                if(obs.type === TYPE_BLOCK){
+                    ctx.fillStyle = '#aaffcc';
+                    ctx.fillRect(obs.x+4, obs.y+4, obs.w-8, 5);
+                    ctx.fillStyle = '#226644';
+                    ctx.fillRect(obs.x+6, obs.y+14, 5, 4);
+                    ctx.fillRect(obs.x+16, obs.y+14, 5, 4);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(obs.x+7, obs.y+20, 3, 3);
+                    ctx.fillRect(obs.x+17, obs.y+20, 3, 3);
+                } else {
+                    ctx.fillStyle = '#ff6644';
+                    for(let s=0; s<3; s++){
+                        let spikeX = obs.x + 4 + s*7;
+                        ctx.beginPath();
+                        ctx.moveTo(spikeX, obs.y);
+                        ctx.lineTo(spikeX+5, obs.y-12);
+                        ctx.lineTo(spikeX-5, obs.y-12);
+                        ctx.fill();
+                    }
+                }
+            }
+            ctx.shadowBlur = 0;
+        }
+
+        function drawGround(){
+            let grad = ctx.createLinearGradient(0, GROUND_Y-8, 0, GROUND_Y+5);
+            grad.addColorStop(0, '#2a2f3c');
+            grad.addColorStop(1, '#181e2a');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, GROUND_Y-6, W, 12);
+            ctx.fillStyle = '#3e4d6b';
+            ctx.fillRect(0, GROUND_Y-3, W, 4);
+            ctx.fillStyle = '#aac7ff';
+            ctx.fillRect(0, GROUND_Y-1, W, 2);
+            
+            const stripeWidth = 28;
+            const stripeGap = 22;
+            const totalPattern = stripeWidth + stripeGap;
+            for(let i = -2; i < 25; i++){
+                let x = (i * totalPattern + groundOffset) % (W + totalPattern) - totalPattern;
+                ctx.fillStyle = '#f2c94c';
+                ctx.fillRect(x, GROUND_Y-9, stripeWidth, 3);
+            }
+        }
+        
+        function drawPlayer(){
+            ctx.save();
+            if(screenShake > 0){
+                ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+            }
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = '#00e0ff';
+            ctx.fillStyle = '#f5d742';
+            ctx.fillRect(PLAYER_X, playerY, PLAYER_SIZE, PLAYER_SIZE);
+            ctx.fillStyle = '#111111';
+            ctx.fillRect(PLAYER_X+22, playerY+8, 6, 6);
+            ctx.fillRect(PLAYER_X+6, playerY+8, 6, 6);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(PLAYER_X+23, playerY+9, 3, 3);
+            ctx.fillRect(PLAYER_X+7, playerY+9, 3, 3);
+            ctx.fillStyle = '#b3470c';
+            ctx.fillRect(PLAYER_X+10, playerY+22, 14, 4);
+            ctx.fillStyle = '#e09d32';
+            ctx.fillRect(PLAYER_X+4, playerY-4, 24, 6);
+            ctx.restore();
+        }
+
+        function drawBackground(){
+            let level = LEVELS[currentLevel];
+            let hue = level ? level.bgHue : 210;
+            let gradTop = ctx.createLinearGradient(0,0,0,H/2);
+            gradTop.addColorStop(0, `hsl(${hue}, 70%, 12%)`);
+            gradTop.addColorStop(1, `hsl(${hue+20}, 65%, 18%)`);
+            ctx.fillStyle = gradTop;
+            ctx.fillRect(0,0,W,H/1.5);
+            ctx.fillStyle = '#121826';
+            ctx.fillRect(0,H/2.5,W,H);
+            
+            for(let i=0;i<70;i++){
+                let baseX = (i * 131) % W;
+                let baseY = (i * 57) % (H-80);
+                let starX = (baseX + bgStarOffset * (0.5 + (i%3)*0.1)) % W;
+                ctx.fillStyle = `rgba(255,240,200,${0.3+Math.sin(Date.now()*0.002+i)*0.1})`;
+                ctx.fillRect(starX, baseY, 2, 2);
+            }
+        }
+        
+        function drawGameOverlay(){
+            if(gameOver){
+                ctx.font = 'bold 34px monospace';
+                ctx.fillStyle = '#f0a0ff';
+                if(score >= maxScore){
+                    ctx.fillText('🏆 FASE COMPLETA! 🏆', W/2-180, H/2-45);
+                } else {
+                    ctx.fillText('⚡ GAME OVER', W/2-130, H/2-45);
+                }
+                ctx.font = '18px monospace';
+                ctx.fillStyle = '#eee';
+                ctx.fillText('ESCOLHA A FASE e clique em INICIAR', W/2-170, H/2+30);
+            } else if(!gameStarted){
+                ctx.font = 'bold 28px monospace';
+                ctx.fillStyle = '#f6ecc2';
+                ctx.fillText('⚡⚡GEOMETRY DASH⚡⚡ ', W/2-145, H/2-40);
+                ctx.font = '16px monospace';
+                ctx.fillStyle = '#bbd9ff';
+                ctx.fillText('1️⃣ Selecione a FASE no menu acima', W/2-150, H/2+10);
+                ctx.fillText('2️⃣ Clique em INICIAR ou aperte ESPAÇO', W/2-155, H/2+40);
+                ctx.fillStyle = '#88ffaa';
+                ctx.fillText('🟢 BLOCOS VERDES: PISE EM CIMA | 🔴 ESPINHOS: MORTE', W/2-210, H/2+80);
+            }
+        }
+
+        function render(){
+            ctx.clearRect(0,0,W,H);
+            drawBackground();
+            drawGround();
+            drawObstacles();
+            drawPlayer();
+            drawGameOverlay();
+            if(hitEffectTimer > 0){
+                ctx.globalAlpha = 0.3;
+                ctx.fillStyle = '#ff3300';
+                ctx.fillRect(0,0,W,H);
+                ctx.globalAlpha = 1;
+            }
+            ctx.font = "bold 11px monospace";
+            ctx.fillStyle = "#aaa";
+            ctx.fillText(`FASE ${currentLevel} - ${LEVELS[currentLevel].name}`, W-150, 22);
+        }
+        
+        function gameLoop(){
+            if(!gameOver && gameStarted){
+                updateGame();
+            }
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function handleJump(e){
+            if(e.type === 'keydown'){
+                if(e.code === 'Space' || e.code === 'ArrowUp'){
+                    e.preventDefault();
+                    jump();
+                }
+            } else {
+                e.preventDefault();
+                jump();
+            }
+        }
+        
+        document.getElementById('loadLevelBtn').addEventListener('click', () => {
+            let newLevel = parseInt(document.getElementById('levelSelect').value);
+            currentLevel = newLevel;
+            loadLevel(currentLevel);
+            gameStarted = true;
+            gameOver = false;
+        });
+        
+        window.addEventListener('keydown', handleJump);
+        canvas.addEventListener('click', (e) => { e.preventDefault(); jump(); });
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+        
+        loadLevel(1);
+        gameStarted = false;
+        updateUI();
+        gameLoop();
+    })();
+</script>
+</body>
+</html>

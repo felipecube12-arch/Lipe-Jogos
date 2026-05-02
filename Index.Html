@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogos Lipe</title>
+    <style>
+        body {
+            background-color: black;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* Container de jogos - grade flexível */
+        .jogos-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Cada card de jogo */
+        .jogo-card {
+            position: relative;
+            width: 200px;
+            transition: transform 0.3s ease;
+        }
+
+        .jogo-card:hover {
+            transform: scale(1.05);
+        }
+
+        .jogo-card img {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 15px;
+            display: block;
+        }
+
+        .titulo-jogo {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            color: white;
+            text-align: center;
+            padding: 40px 10px 12px 10px;
+            border-radius: 0 0 15px 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .jogo-card a {
+            text-decoration: none;
+        }
+
+        /* Estilos para os anúncios */
+        .anuncio-topo {
+            text-align: center;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            max-width: 970px;
+        }
+
+        .anuncio-entre {
+            text-align: center;
+            margin: 30px auto;
+            padding: 10px;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            max-width: 728px;
+        }
+
+        .anuncio-rodape {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            max-width: 728px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Texto de exemplo nos placeholders de anúncio */
+        .placeholder-ad {
+            color: #888;
+            font-size: 12px;
+            padding: 20px;
+            border: 1px dashed #444;
+            display: inline-block;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .anuncio-topo, .anuncio-entre, .anuncio-rodape {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- ANÚNCIO 1: TOPO DA PÁGINA (acima de tudo)   -->
+    <!-- Mantém distância de 150px dos jogos        -->
+    <!-- ========================================== -->
+    <div class="anuncio-topo">
+        <div class="placeholder-ad">
+            📢 ESPAÇO PARA ANÚNCIO 728x90 OU 970x90<br>
+            (Código do Google AdSense vai aqui)
+        </div>
+    </div>
+
+    <h1>Jogos disponiveis</h1>
+
+    <!-- ========================================== -->
+    <!-- ANÚNCIO 2: ENTRE O TÍTULO E OS JOGOS      -->
+    <!-- Mantém distância de 150px dos cards        -->
+    <!-- ========================================== -->
+    <div class="anuncio-entre">
+        <div class="placeholder-ad">
+            📢 ESPAÇO PARA ANÚNCIO 728x90<br>
+            (Código do Google AdSense vai aqui)
+        </div>
+    </div>
+
+    <!-- CONTAINER PRINCIPAL DOS JOGOS -->
+    <div class="jogos-container">
+        
+        <!-- Jogo 1 - Flap Bird -->
+        <div class="jogo-card">
+            <a href="Flap Bird.HTML">
+                <img src="Capa Flappy Bird.jpeg">
+                <div class="titulo-jogo">Flap Bird</div>
+            </a>
+        </div>
+
+        <!-- Jogo 2 - Penalty -->
+        <div class="jogo-card">
+            <a href="Penalty Rivals.html">
+                <img src="Capa Penalty Rivals.png">
+                <div class="titulo-jogo">Penalty Rivals</div>
+            </a>
+        </div>
+
+        <!-- Jogo 3 - Geometry Dash -->
+        <div class="jogo-card">
+            <a href="Geometry Dash.HTML">
+                <img src="Capa Geometry Dash.png">
+                <div class="titulo-jogo">Geometry Dash</div>
+            </a>
+        </div>
+
+        <!-- Jogo 4 - Brain Puzzle -->
+        <div class="jogo-card">
+            <a href="puzzle.html">
+                <img src="URL_DA_IMAGEM">
+                <div class="titulo-jogo">Brain Puzzle</div>
+            </a>
+        </div>
+
+        <!-- Jogo 5 -->
+        <div class="jogo-card">
+            <a href="jogo5.html">
+                <img src="capa5.jpg">
+                <div class="titulo-jogo">Jogo 5</div>
+            </a>
+        </div>
+
+        <!-- Jogo 6 -->
+        <div class="jogo-card">
+            <a href="jogo6.html">
+                <img src="capa6.jpg">
+                <div class="titulo-jogo">Jogo 6</div>
+            </a>
+        </div>
+
+        <!-- Jogo 7 -->
+        <div class="jogo-card">
+            <a href="jogo7.html">
+                <img src="capa7.jpg">
+                <div class="titulo-jogo">Jogo 7</div>
+            </a>
+        </div>
+
+        <!-- Jogo 8 -->
+        <div class="jogo-card">
+            <a href="jogo8.html">
+                <img src="capa8.jpg">
+                <div class="titulo-jogo">Jogo 8</div>
+            </a>
+        </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ANÚNCIO 3: RODAPÉ DA PÁGINA (depois dos jogos) -->
+    <!-- Mantém distância de 150px dos cards        -->
+    <!-- ========================================== -->
+    <div class="anuncio-rodape">
+        <div class="placeholder-ad">
+            📢 ESPAÇO PARA ANÚNCIO 728x90<br>
+            (Código do Google AdSense vai aqui)
+        </div>
+    </div>
+
+</body>
+</html>
